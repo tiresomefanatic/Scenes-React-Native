@@ -1,64 +1,89 @@
-import React, { useCallback, useMemo, useRef } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, SafeAreaView, ActivityIndicator } from 'react-native';
+import React, { useCallback, useMemo, useRef, useEffect } from 'react';
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+  Dimensions,
+  ScrollView,
+  FlatList,
+  Keyboard,
+  KeyboardEvent
+} from 'react-native';
 import BottomSheet, { BottomSheetFlatList } from '@gorhom/bottom-sheet';
 import { Ionicons } from '@expo/vector-icons';
 import { useInfiniteLocations } from '../hooks/useInfiniteLocations';
 
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+
 const CustomBottomSheet: React.FC = () => {
   const bottomSheetRef = useRef<BottomSheet>(null);
-  const snapPoints = useMemo(() => ['20%', '50%', '100%'], []);
+  const snapPoints = useMemo(() => ['20%', '90%'], []);
 
   const { 
     data, 
     fetchNextPage, 
     hasNextPage, 
-    isFetchingNextPage, 
-    status,
-    error
+    isFetchingNextPage
   } = useInfiniteLocations();
-
-  // console.log('InfiniteQuery status:', status);
-  // console.dir('InfiniteQuery data:', data);
-  // console.log('InfiniteQuery error:', error);
 
   const locations = useMemo(() => 
     data?.pages.flatMap(page => page.data) ?? [], 
     [data]
   );
-  console.log('Flattened locations:', locations);
 
   const handleSheetChanges = useCallback((index: number) => {
-   // console.log('handleSheetChanges', index);
+    console.log('handleSheetChanges', index);
+    if (index === 0) {
+      // Bottom sheet is at its lowest point (20%)
+      Keyboard.dismiss();
+    }
   }, []);
 
-  const renderItem = useCallback(({ item }:any) => (
-    <View style={styles.locationItem}>
-      <Text style={styles.locationName}>{item.name}</Text>
-      <Text style={styles.locationCoords}>{item.latitude}, {item.longitude}</Text>
-    </View>
-  ), []);
-
-  const listFooterComponent = useCallback(() => {
-    if (!hasNextPage) return null;
-    return (
-      <View style={styles.footerContainer}>
-        {isFetchingNextPage ? (
-          <ActivityIndicator color="#8e44ad" />
-        ) : (
-          <TouchableOpacity onPress={() => fetchNextPage()} style={styles.loadMoreButton}>
-            <Text style={styles.loadMoreText}>Load More</Text>
-          </TouchableOpacity>
-        )}
-      </View>
+  useEffect(() => {
+    const keyboardWillShowListener = Keyboard.addListener(
+      'keyboardWillShow',
+      handleKeyboardShow
     );
-  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
+    // const keyboardWillHideListener = Keyboard.addListener(
+    //   'keyboardWillHide',
+    // //  handleKeyboardHide
+    // );
+
+    return () => {
+      keyboardWillShowListener.remove();
+     // keyboardWillHideListener.remove();
+    };
+  }, []);
+
+  const handleKeyboardShow = useCallback((event: KeyboardEvent) => {
+    bottomSheetRef.current?.expand();
+  }, []);
+
+  // const handleKeyboardHide = useCallback(() => {
+  //   bottomSheetRef.current?.snapToIndex(0); // Snap to the lowest point (20%)
+  // }, []);
 
   const categories = [
-    { id: 'foryou', icon: '🟣', label: 'For you' },
-    { id: 'restaurants', icon: '🍽️', label: 'Restaurants' },
-    { id: 'parties', icon: '🎉', label: 'Parties' },
-    { id: 'breweries', icon: '🍺', label: 'Breweries' },
+    { id: 'favorites', label: 'Favourites' },
+    { id: 'restaurants', label: 'Restaurants' },
+    { id: 'cafes', label: 'Cafes' },
+    { id: 'parks', label: 'Parks' },
   ];
+
+  const renderCategoryItem = useCallback(({ item }: any) => (
+    <TouchableOpacity key={item.id} style={styles.categoryButton}>
+      <Text style={styles.categoryLabel}>{item.label}</Text>
+    </TouchableOpacity>
+  ), []);
+
+  const renderLocationItem = useCallback(({ item }: any) => (
+    <View style={styles.locationItem}>
+      <Text style={styles.locationName}>{item.name}</Text>
+      <Text style={styles.locationAddress}>{item.address}</Text>
+    </View>
+  ), []);
 
   return (
     <BottomSheet
@@ -69,62 +94,64 @@ const CustomBottomSheet: React.FC = () => {
       backgroundStyle={styles.bottomSheetBackground}
       handleIndicatorStyle={styles.handleIndicator}
     >
-      <SafeAreaView style={styles.contentContainer}>
+      <View style={styles.contentContainer}>
         <View style={styles.searchContainer}>
-          <Ionicons name="search" size={20} color="#666" style={styles.searchIcon} />
+          <Ionicons name="search" size={20} color="#999" style={styles.searchIcon} />
           <TextInput
             style={styles.searchInput}
-            placeholder="Search here"
-            placeholderTextColor="#666"
+            placeholder="Search for Places"
+            placeholderTextColor="#999"
           />
-          <TouchableOpacity style={styles.filterButton}>
-            <Ionicons name="options-outline" size={20} color="#fff" />
-          </TouchableOpacity>
         </View>
-        <View style={styles.categoriesContainer}>
-          {categories.map((category) => (
-            <TouchableOpacity key={category.id} style={styles.categoryButton}>
-              <Text style={styles.categoryIcon}>{category.icon}</Text>
-              <Text style={styles.categoryLabel}>{category.label}</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
+        
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.categoriesContainer}
+          style={styles.categoriesList}
+        >
+          {categories.map((item) => renderCategoryItem({ item }))}
+        </ScrollView>
+        
         <BottomSheetFlatList
           data={locations}
+          renderItem={renderLocationItem}
           keyExtractor={(item) => item.id}
-          renderItem={renderItem}
-          ListFooterComponent={listFooterComponent}
+          contentContainerStyle={styles.locationsList}
           onEndReached={() => {
             if (hasNextPage && !isFetchingNextPage) {
               fetchNextPage();
             }
           }}
           onEndReachedThreshold={0.5}
-          contentContainerStyle={styles.listContainer}
         />
-      </SafeAreaView>
+      </View>
     </BottomSheet>
   );
 };
 
 const styles = StyleSheet.create({
   bottomSheetBackground: {
-    backgroundColor: '#1e1e1e',
+    backgroundColor: '#fff',
   },
   handleIndicator: {
-    backgroundColor: '#ffffff',
+    backgroundColor: '#ccc',
+    width: 40,
   },
   contentContainer: {
     flex: 1,
-    padding: 16,
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 32,
   },
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#2a2a2a',
-    borderRadius: 25,
+    backgroundColor: '#f0f0f0',
+    borderRadius: 20,
     paddingHorizontal: 12,
     marginBottom: 16,
+    height: 40,
   },
   searchIcon: {
     marginRight: 8,
@@ -132,62 +159,48 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     height: 40,
-    color: '#fff',
+    color: '#000',
     fontSize: 16,
   },
-  filterButton: {
-    backgroundColor: '#8e44ad',
-    borderRadius: 20,
-    padding: 8,
+  categoriesList: {
+    maxHeight: 40,
+    marginBottom: 16,
   },
   categoriesContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 16,
-    backgroundColor: '#3a2a2a'
+    paddingRight: 16,
   },
   categoryButton: {
     alignItems: 'center',
-  },
-  categoryIcon: {
-    fontSize: 24,
-    marginBottom: 4,
+    justifyContent: 'center',
+    marginRight: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+    backgroundColor: '#f0f0f0',
   },
   categoryLabel: {
-    color: '#fff',
+    color: '#000',
     fontSize: 12,
+    fontWeight: '500',
   },
-  listContainer: {
-    paddingTop: 16,
+  locationsList: {
+    paddingTop: 8,
   },
   locationItem: {
-    backgroundColor: '#2a2a2a',
+    backgroundColor: '#f9f9f9',
     padding: 16,
     marginBottom: 8,
     borderRadius: 8,
   },
   locationName: {
-    color: '#fff',
     fontSize: 16,
     fontWeight: 'bold',
+    color: '#000',
   },
-  locationCoords: {
-    color: '#ccc',
+  locationAddress: {
     fontSize: 14,
-  },
-  footerContainer: {
-    paddingVertical: 16,
-    alignItems: 'center',
-  },
-  loadMoreButton: {
-    backgroundColor: '#8e44ad',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-  },
-  loadMoreText: {
-    color: '#fff',
-    fontWeight: 'bold',
+    color: '#666',
+    marginTop: 4,
   },
 });
 

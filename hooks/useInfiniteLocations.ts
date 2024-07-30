@@ -8,13 +8,13 @@ export function useInfiniteLocations() {
   return useInfiniteQuery<PaginatedResponse<Location>, Error, InfiniteData<PaginatedResponse<Location>>, [string]>({
     queryKey: ['locations'],
     queryFn: async ({ pageParam }) => {
-      console.log('Fetching locations with cursor:', pageParam);
+     // console.log('Fetching locations with cursor:', pageParam);
       const result = await databaseService.getLocations(pageParam as string);
-      console.log('Fetched locations:', result);
+     // console.log('Fetched locations:', result);
       return result;
     },
     getNextPageParam: (lastPage) => {
-      console.log('Next cursor:', lastPage.nextCursor);
+      //console.log('Next cursor:', lastPage.nextCursor);
       return lastPage.nextCursor;
     },
     initialPageParam: undefined,

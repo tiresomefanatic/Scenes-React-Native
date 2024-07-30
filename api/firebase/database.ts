@@ -28,7 +28,7 @@ export class FirebaseDatabaseService implements DatabaseService {
     } as Location));
 
     const nextCursor = snapshot.docs.length === limitCount ? snapshot.docs[snapshot.docs.length - 1].id : undefined;
-    console.log("docs legntg", snapshot.docs.length);
+   // console.log("docs legntg", snapshot.docs.length);
 
     return { data: locations, nextCursor };
   }
