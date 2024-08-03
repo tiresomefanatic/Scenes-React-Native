@@ -14,34 +14,41 @@ export default function TabLayout() {
         tabBarActiveTintColor: Colors[colorScheme ?? 'dark'].tint,
         headerShown: false,
       }}>
-      <Tabs.Screen
-        name="index"
-        options={{
-          title: 'Home',
-          tabBarIcon: ({ color, focused }) => (
-            <TabBarIcon name={focused ? 'home' : 'home-outline'} color={color} />
-          ),
-          tabBarInactiveBackgroundColor: Colors[colorScheme ?? 'dark'].tint,
-        }}
-      />
-      <Tabs.Screen
+        <Tabs.Screen
         name="explore"
         options={{
           title: 'Explore',
           tabBarIcon: ({ color, focused }) => (
-            <TabBarIcon name={focused ? 'code-slash' : 'code-slash-outline'} color={color} />
+            <TabBarIcon name={focused ? 'home' : 'home-outline'} color={color} />
+
           ),
+          tabBarInactiveBackgroundColor: Colors[colorScheme ?? 'light'].background,
+
         }}
       />
-         <Tabs.Screen
+    
+       <Tabs.Screen
         name="map"
         options={{
           title: 'Map',
           tabBarIcon: ({ color, focused }) => (
-            <TabBarIcon name={focused ? 'code-slash' : 'code-slash-outline'} color={color} />
+            <TabBarIcon name={focused ? 'earth' : 'earth-outline'} color={color} />
           ),
+                    tabBarInactiveBackgroundColor: Colors[colorScheme ?? 'light'].background,
+
         }}
       />
+        <Tabs.Screen
+        name="index"
+        options={{
+          title: 'Home',
+          tabBarIcon: ({ color, focused }) => (
+            <TabBarIcon name={focused ? 'person' : 'person-outline'} color={color} />
+          ),
+          tabBarInactiveBackgroundColor: Colors[colorScheme ?? 'light'].background,
+        }}
+      />
+
     </Tabs>
   );
 }

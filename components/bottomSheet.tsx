@@ -14,6 +14,7 @@ import {
 import BottomSheet, { BottomSheetFlatList } from '@gorhom/bottom-sheet';
 import { Ionicons } from '@expo/vector-icons';
 import { useInfiniteLocations } from '../hooks/useInfiniteLocations';
+import {Image} from 'expo-image'
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -32,6 +33,8 @@ const CustomBottomSheet: React.FC = () => {
     data?.pages.flatMap(page => page.data) ?? [], 
     [data]
   );
+
+  console.log('card-item',data)
 
   const handleSheetChanges = useCallback((index: number) => {
     console.log('handleSheetChanges', index);
@@ -66,22 +69,54 @@ const CustomBottomSheet: React.FC = () => {
   // }, []);
 
   const categories = [
-    { id: 'favorites', label: 'Favourites' },
-    { id: 'restaurants', label: 'Restaurants' },
-    { id: 'cafes', label: 'Cafes' },
-    { id: 'parks', label: 'Parks' },
+    { id: 'favorites', label: 'Favourites', image:'https://openmoji.org/data/color/svg/1F31F.svg' },
+    { id: 'restaurants', label: 'Restaurants', image:'https://openmoji.org/data/color/svg/1F37D.svg' },
+    { id: 'cafes', label: 'Cafes', image:'https://openmoji.org/data/color/svg/2615.svg' },
+    { id: 'parks', label: 'Parks', image:'https://openmoji.org/data/color/svg/1F333.svg' },
+    { id: 'sports', label: 'Sports', image:'https://openmoji.org/data/color/svg/1F3C0.svg' },
+    { id: 'adventure', label: 'Adventure', image:'https://openmoji.org/data/color/svg/1FA82.svg' },
+    { id: 'entertainment', label: 'Entertainment', image:'https://openmoji.org/data/color/svg/1F4FD.svg' },
+    { id: 'shopping', label: 'Shopping', image:'https://openmoji.org/data/color/svg/1F6D2.svg' },
+
   ];
 
   const renderCategoryItem = useCallback(({ item }: any) => (
     <TouchableOpacity key={item.id} style={styles.categoryButton}>
+      <Image source={item.image} style={{height:24, width:24}} />
       <Text style={styles.categoryLabel}>{item.label}</Text>
     </TouchableOpacity>
   ), []);
 
+  const blurhash =
+  '|rF?hV%2WCj[ayj[a|j[az_NaeWBj@ayfRayfQfQM{M|azj[azf6fQfQfQIpWXofj[ayj[j[fQayWCoeoeaya}j[ayfQa{oLj?j[WVj[ayayj[fQoff7azayj[ayj[j[ayofayayayj[fQj[ayayj[ayfjj[j[ayjuayj[';
+
+
   const renderLocationItem = useCallback(({ item }: any) => (
     <View style={styles.locationItem}>
-      <Text style={styles.locationName}>{item.name}</Text>
-      <Text style={styles.locationAddress}>{item.address}</Text>
+   {/* Location Details */}
+      <View style={styles.locationCardTop}>
+        <View style={styles.CardTopLeft}>
+          <Image
+          style={styles.locationImage}
+          source={item.displayPicture}
+          placeholder={{ blurhash }}
+          contentFit="cover"
+          transition={1000}
+          />
+          <View style={styles.locationDetails}>
+          <Text style={styles.locationName}>{item.name}</Text>
+          <Text style={styles.locationCategory}>Category</Text>
+          <Text style={styles.locationDistance}>2.5km</Text>
+          </View>
+        </View>
+      </View>
+  {/* Location Clips */}
+      <View style={styles.locationCardBottom}>
+        <View style={styles.clipThumbnail}></View>
+        <View style={styles.clipThumbnail}></View>
+        <View style={styles.clipThumbnail}></View>
+        <View style={styles.clipThumbnail}></View>
+      </View>
     </View>
   ), []);
 
@@ -95,6 +130,7 @@ const CustomBottomSheet: React.FC = () => {
       handleIndicatorStyle={styles.handleIndicator}
     >
       <View style={styles.contentContainer}>
+        {/* Search Bar */}
         <View style={styles.searchContainer}>
           <Ionicons name="search" size={20} color="#999" style={styles.searchIcon} />
           <TextInput
@@ -104,6 +140,7 @@ const CustomBottomSheet: React.FC = () => {
           />
         </View>
         
+        {/* Category List */}
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
@@ -113,6 +150,7 @@ const CustomBottomSheet: React.FC = () => {
           {categories.map((item) => renderCategoryItem({ item }))}
         </ScrollView>
         
+        {/* Location List */}
         <BottomSheetFlatList
           data={locations}
           renderItem={renderLocationItem}
@@ -177,11 +215,20 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     borderRadius: 20,
     backgroundColor: '#f0f0f0',
+    flexDirection:'row',
+    gap:8
   },
   categoryLabel: {
     color: '#000',
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: '500',
+  },
+  locationImage:{
+    height:64,
+    width:64,
+    borderRadius:8,
+    marginRight:8,
+    resizeMode:'cover',
   },
   locationsList: {
     paddingTop: 8,
@@ -189,19 +236,51 @@ const styles = StyleSheet.create({
   locationItem: {
     backgroundColor: '#f9f9f9',
     padding: 16,
-    marginBottom: 8,
+    marginBottom: 12,
     borderRadius: 8,
+    flexDirection:'column',
+    alignItems:'flex-start',
+    gap: 12
   },
   locationName: {
     fontSize: 16,
     fontWeight: 'bold',
     color: '#000',
   },
-  locationAddress: {
+  locationCategory: {
     fontSize: 14,
     color: '#666',
-    marginTop: 4,
+    // marginTop: 4,
   },
+  locationDistance:{
+    fontSize: 14,
+    color: '#666',
+  },
+
+  locationCardTop:{
+    flexDirection:'row',
+    alignItems:'center',
+    justifyContent:'space-between',
+    gap:4
+  },
+  locationDetails:{
+    flexDirection:'column'
+  },
+  locationCardBottom:{
+    flexDirection:'row',
+    justifyContent:'space-between',
+    gap:4
+  },
+  CardTopLeft:{
+    flexDirection:'row',
+    alignItems:'center',
+  },
+  clipThumbnail:{
+    width: 80,
+    height: 140,
+    borderRadius: 8,
+    backgroundColor:'orange'
+  }
 });
 
 export default CustomBottomSheet;
